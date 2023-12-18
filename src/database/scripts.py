@@ -17,7 +17,7 @@ def get_by(db: Session, table:declarative_base, column:Column, value:Any) -> Opt
     try:
         return db.query(table).filter(column == value).all()
     except Exception:
-        return None
+        return []
 
 def delete_by(db:Session, table:declarative_base, column:Column, value:Any):
     db.execute(delete(table).where(column == value))
@@ -237,11 +237,80 @@ def use_invite_link(db:Session, user_id:int, link_id:str):
         db.add(relationship)
         if link.usage_limit:
             link.usage_limit = link.usage_limit - 1
-    except AlreadyInGroupException:
-        raise AlreadyInGroupException
+        db.commit()
     except Exception as e:
         db.rollback()
         raise e
-    db.commit()
+
+def get_join_group_invite_by_id(db:Session, id:int) -> Optional[outer_models.Join_group_invite]:
+    try:
+        return get_by(db, models.Join_group_invite, models.Join_group_invite.id, id)[0]
+    except Exception:
+        return None
+
+def get_join_group_invites_by_created_by_id(db:Session, user_id:int) -> Optional[list[outer_models.Join_group_invite]]:
+    try:
+        ans = []
+        i:models.Join_group_invite
+        for i in get_by(db, models.Join_group_invite, models.Join_group_invite.created_by_id, user_id):
+            try:
+                ans.append(outer_models.Join_group_invite.model_validate(i))
+            except Exception:
+                pass
+        return ans
+    except Exception:
+        return None
+
+def get_join_group_invites_by_for_whom_id(db:Session, user_id:int) -> Optional[list[outer_models.Join_group_invite]]:
+    try:
+        ans = []
+        i:models.Join_group_invite
+        for i in get_by(db, models.Join_group_invite, models.Join_group_invite.for_whom_id, user_id):
+            try:
+                ans.append(outer_models.Join_group_invite.model_validate(i))
+            except Exception:
+                pass
+        return ans
+    except Exception:
+        return None
+
+
+def create_join_group_invite(db:Session, created_by_id:int, for_whom_id:int, group_id:int, role:models.Base_group_roles):
+    try:
+        invite = models.Join_group_invite(created_by_id=created_by_id,
+                                          for_whom_id=for_whom_id,
+                                          group_id=group_id,
+                                          role=role)
+        db.add(invite)
+        db.commit()
+    except Exception:
+        raise Exception
+
+def use_join_group_invite(db:Session, user_id:int, invite_id:int):
+    try:
+        invite = get_join_group_invite_by_id(db, invite_id)
+        if invite.for_whom_id != user_id:
+            raise Exception
+        relationship = models.GROUP_USERS(user_id=user_id, group_id=invite.group_id, role=invite.role, added_by_id=invite.created_by_id)
+        db.add(relationship)
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        raise e
+
+def delete_join_group_invite(db:Session, user_id:int, invite_id:int):
+    try:
+        invite = get_join_group_invite_by_id(db, invite_id)
+        if invite.for_whom_id != user_id:
+            raise Exception
+        if get_user_group_relationship(db, user_id, invite.group_id) is not None:
+            raise Exception
+        db.execute(delete(models.Join_group_invite).where(models.Join_group_invite.id == invite.id))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+
 
 

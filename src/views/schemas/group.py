@@ -12,10 +12,6 @@ class Group(BaseModel):
     name:Optional[str]
     logo: Optional[str]
 
-    class Config:
-        from_attributes = True
-        strict = False
-
 class USER_GROUP_relationship(BaseModel):
     id : int
 

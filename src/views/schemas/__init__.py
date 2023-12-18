@@ -8,3 +8,4 @@ from .user import *
 from .auth import *
 from .group import *
 from .invite_group_link import *
+from .join_group_invite import *

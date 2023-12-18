@@ -57,4 +57,12 @@ class Invite_group_link(BaseModel):
     group_id: int
     created_by_id: int
 
+class Join_group_invite(BaseModel):
+    id: int
+    created_at: datetime
+    role: Base_group_roles
+    group_id: int
+    for_whom_id: int
+    created_by_id: int
+
 

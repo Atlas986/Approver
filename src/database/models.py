@@ -94,7 +94,7 @@ class Comment(Base):
 
 
 class Invite_group_link(Base):
-    __tablename__ = "share_group_links"
+    __tablename__ = "invite_group_links"
 
     id = Column(String, primary_key=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -103,6 +103,17 @@ class Invite_group_link(Base):
 
     role = Column(Enum(Base_group_roles))
     group_id = Column(ForeignKey('groups.id'))
+    created_by_id = Column(ForeignKey('users.id'))
+
+
+
+class Join_group_invite(Base):
+    __tablename__ = "join_group_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    role = Column(Enum(Base_group_roles))
+    group_id = Column(ForeignKey('groups.id'))
+    for_whom_id = Column(ForeignKey('users.id'))
     created_by_id = Column(ForeignKey('users.id'))
 
 
