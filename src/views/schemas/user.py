@@ -1,16 +1,21 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from . import BaseModel
 from pydantic.types import StrictBool
 
-
-class UserCreate(BaseModel):
-    password:str
+class User(BaseModel):
     username:str
     email:str
 
-class UserCreateError(BaseModel):
-    username_taken:StrictBool = False
-    email_taken:StrictBool = False
+    class Config:
+        from_attributes = True
+class UserCreate(User):
+    password:str
 
-class UserSchemaSignin(BaseModel):
+class UserCreateError(BaseModel):
+    username_taken:bool = False
+    email_taken:bool = False
+
+class UserSignin(BaseModel):
     password: str
     username: str

@@ -12,7 +12,7 @@ router = APIRouter(prefix='/auth', tags=['Auth'])
              responses={
                  401 : {}
              })
-def login(user: schemas.UserSchemaSignin, session = Depends(database.utils.get_session)):
+def login(user: schemas.UserSignin, session = Depends(database.utils.get_session)):
     user_data = database.scripts.login(session, username=user.username, password=user.password)
 
     if user_data is None:
