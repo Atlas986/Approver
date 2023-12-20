@@ -9,8 +9,8 @@ from . import BaseModel
 
 class Group(BaseModel):
     id: int
-    name:Optional[str]
-    logo: Optional[str]
+    name:Optional[str] = None
+    logo: Optional[str] = None
 
 class USER_GROUP_relationship(BaseModel):
     id : int

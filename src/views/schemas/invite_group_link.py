@@ -19,8 +19,8 @@ class RestrictedInviteLink(BaseModel):
 
 class InviteLinkCreate(BaseModel):
     group_id: int
-    usage_limit: Optional[int]
-    expires: Optional[timedelta]
+    usage_limit: Optional[int] = None
+    expires: Optional[timedelta] = None
     role: Group_roles_without_owner
 
 class Invite_link_status(enum.StrEnum):

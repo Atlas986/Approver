@@ -9,143 +9,107 @@ from . import schemas
 from fastapi import Depends, FastAPI, HTTPException
 
 from ..config import jwt_config
+from ..database import scripts as db_scripts
+from ..database.scripts import invite_group_link
 
 router = APIRouter(prefix='/invite_group_links', tags=['Invite_group_link'])
 
 @router.post("/create",
              response_model=schemas.InviteLink,
              responses={
+                 400: {'description' : 'User not in group'},
                  401: {},
-                 403:{"model" : schemas.GroupRightsRestrictionError},
-                 500: {}
+                 403: {'description' : 'Access forbidden due to user rights'},
              })
 def create_invite_link(invite_link:schemas.InviteLinkCreate,
                        db:Session = Depends(database.utils.get_session),
                        credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
-    relationship = database.scripts.get_user_group_relationship(db, group_id=invite_link.group_id, user_id=credentials.subject["id"])
-    if relationship is None:
-        raise HTTPException(status_code=403, detail=schemas.GroupRightsRestrictionError(in_group=False).model_dump())
-    if not schemas.Group_roles.can_create_invite_link(relationship.role, invite_link.role):
-        raise HTTPException(status_code=403, detail=schemas.GroupRightsRestrictionError().model_dump())
+    user_id = credentials.subject["id"]
     try:
-        return schemas.InviteLink.model_validate(
-            database.scripts.create_invite_group_link(db,
-                                                      group_id=invite_link.group_id,
-                                                      user_id=credentials.subject["id"],
-                                                      usage_limit=invite_link.usage_limit,
-                                                      role=invite_link.role,
-                                                      expires=invite_link.expires)
-        )
-    except Exception:
-        raise HTTPException(status_code=500)
+        return schemas.InviteLink.model_validate(invite_group_link.create.execute(db=db,
+                                             user_id=user_id,
+                                             group_id=invite_link.group_id,
+                                             usage_limit=invite_link.usage_limit,
+                                             role=invite_link.role,
+                                             expires=invite_link.expires))
+    except invite_group_link.create.not_in_group:
+        raise HTTPException(status_code=400)
+    except invite_group_link.create.forbidden:
+        raise HTTPException(status_code=403)
 
-@router.get("/my_links",
+
+@router.get("/by_user",
             response_model=list[schemas.InviteLink],
             responses={
                 401 : {},
-                500 : {}
             })
 def get_my_invite_links(db:Session = Depends(database.utils.get_session),
                         credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
-    try:
-        links = database.scripts.get_links_by_user(db, created_by_id=credentials.subject["id"])
-        ans = []
-        for i in links:
-            try:
-                ans.append(schemas.InviteLink.model_validate(i))
-            except Exception:
-                pass
-        return ans
-    except Exception:
-        raise HTTPException(status_code=500)
+    user_id = credentials.subject["id"]
+    return [schemas.InviteLink.model_validate(i) for i in invite_group_link.by_user.execute(db, user_id)]
 
-@router.get("/my_group_links",
+@router.get("/for_group",
             response_model=list[schemas.InviteLink],
             responses={
+                400:{"description" : "User not in group"},
                 401:{},
-                403:{"model":schemas.GroupRightsRestrictionError},
-                500:{}
+                403:{"description" : "Access forbidden due to user rights"},
             })
 def get_my_group_invite_links(group_id:int,
                         db:Session = Depends(database.utils.get_session),
                         credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
-    relationship = database.scripts.get_user_group_relationship(db, group_id=group_id, user_id=credentials.subject["id"])
-    if relationship is None:
-        raise HTTPException(status_code=403, detail=schemas.GroupRightsRestrictionError(in_group=False).model_dump())
-    if not schemas.Group_roles.can_watch_all_invite_links(relationship.role):
-        raise HTTPException(status_code=403, detail=schemas.GroupRightsRestrictionError().model_dump())
+    user_id=credentials.subject["id"]
     try:
-        links = database.scripts.get_links_by_group(db, group_id=group_id)
-        ans = []
-        for i in links:
-            try:
-                ans.append(schemas.InviteLink.model_validate(i))
-            except Exception:
-                pass
-        return ans
-    except Exception:
-        raise HTTPException(status_code=500)
-
+        return [schemas.InviteLink.model_validate(i) for i in invite_group_link.for_group.execute(db, user_id, group_id)]
+    except invite_group_link.for_group.not_in_group:
+        raise HTTPException(status_code=400)
+    except invite_group_link.for_group.forbidden:
+        raise HTTPException(status_code=403)
 @router.delete("/delete",
-               response_model="",
                responses={
                    401:{},
-                   403:{"model":schemas.GroupRightsRestrictionError},
-                   404:{"model":schemas.InviteLinkNotFoundError},
-                   500:{}
+                   403:{"description" : "Access forbidden due to user rights"},
+                   404:{"description" : "Invite link not found"}
                })
 def delete_invite_link(id:str,
                        db:Session = Depends(database.utils.get_session),
                        credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
-    link_status = database.scripts.get_invite_link_status(db, id)
-    if link_status is not database.outer_models.Invite_link_status:
-        raise HTTPException(status_code=404, detail=schemas.InviteLinkNotFoundError(status=link_status).model_dump())
-    link = database.scripts.get_link_by_id(db, id)
-    group = database.scripts.get_group_by_id(db, link.group_id)
-    relationship = database.scripts.get_user_group_relationship(db, user_id=user_id, group_id=group.id)
-    if (relationship and database.outer_models.Group_roles.can_delete_invite_link(relationship.role)) or link.created_by_id == user_id:
-        try:
-            database.scripts.delete_invite_link_by_id(db, id)
-        except Exception:
-            raise HTTPException(status_code=500)
-    else:
-        raise HTTPException(status_code=403,
-                            detail=schemas.GroupRightsRestrictionError().model_dump())
+    try:
+        invite_group_link.delete_by_id.execute(db, user_id, id)
+    except invite_group_link.delete_by_id.link_not_found:
+        raise HTTPException(status_code=404)
+    except invite_group_link.delete_by_id.forbidden:
+        raise HTTPException(status_code=403)
 
 @router.get("/search",
             response_model=schemas.RestrictedInviteLink,
             responses={
-                404: {"detail" : "Invite link not found",
-                      "model" : schemas.InviteLinkNotFoundError},
-                500:{}
+                404: {"description" : "Invite link not found"},
             })
 def search_for_link(id:str,
                     db: Session = Depends(database.utils.get_session)):
-    link_status = database.scripts.get_invite_link_status(db, id)
-    if link_status is not link_status.active:
-        raise HTTPException(status_code=404, detail=schemas.InviteLinkNotFoundError(status=link_status).model_dump())
-    return schemas.RestrictedInviteLink.model_validate(database.scripts.get_link_by_id(db, id))
+    try:
+        return schemas.RestrictedInviteLink.model_validate(invite_group_link.get_by_id.execute(db, id))
+    except invite_group_link.get_by_id.link_not_found:
+        raise HTTPException(status_code=404)
 
 @router.post("/use_link",
              responses={
-                 400:{"detail" : "User is already in group"},
+                 400:{"description" : "User is already in group"},
                  401:{},
-                 404:{"detail" : "Invite link not found",
-                      "model" : schemas.InviteLinkNotFoundError},
-                 500:{}
+                 404:{"description" : "Invite link not found"},
              })
 def use_invite_link(link_id:str,
                     db:Session = Depends(database.utils.get_session),
                     credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
-    link_status = database.scripts.get_invite_link_status(db, link_id)
-    if link_status != database.outer_models.Invite_link_status.active:
-        raise HTTPException(status_code=404, detail=schemas.InviteLinkNotFoundError(status=link_status).model_dump())
     try:
-        database.scripts.use_invite_link(db, link_id=link_id, user_id=user_id)
-    except database.outer_models.AlreadyInGroupException as msg:
-        raise HTTPException(status_code=400, detail=str(msg))
+        invite_group_link.use.execute(db, link_id=link_id, user_id=user_id)
+    except invite_group_link.use.link_not_found:
+        raise HTTPException(status_code=404)
+    except invite_group_link.use.already_in_group:
+        raise HTTPException(status_code=400)
 
 
 

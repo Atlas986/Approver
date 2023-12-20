@@ -14,23 +14,11 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 
 Base = declarative_base()
 
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    email = Column(String, unique=True, index=True)
-    username = Column(String, unique=True, index=True)
-    password = Column(String)
-    first_name = Column(String)
-    last_name = Column(String)
-    image = Column(String)
-
-class Group(Base):
-    __tablename__ = "groups"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    name = Column(Integer, index=True)
-    logo = Column(String)
+class Invite_link_status(NativeEnum):
+    active = "active"
+    usage_limit_exceeded = "usage_limit_exceeded"
+    expired = "expired"
+    not_found = "not_found"
 
 class Base_group_roles(NativeEnum):
     viewer = "viewer"
@@ -43,28 +31,44 @@ class Group_roles(NativeEnum):
     admin = "admin"
     owner = "owner"
 
-    @classmethod
-    def can_create_invite_link(cls, got_rights: str, given_rights: str) -> bool:
-        if got_rights not in [cls.admin, cls.owner]:
+    @staticmethod
+    def can_create_invite_link(got_rights: str, given_rights: str) -> bool:
+        if got_rights not in [Group_roles.admin, Group_roles.owner]:
             return False
-        if given_rights == cls.owner:
+        if given_rights == Group_roles.owner:
             return False
-        if given_rights == cls.admin and got_rights != cls.owner:
+        if given_rights == Group_roles.admin and got_rights != Group_roles.owner:
             return False
         return True
 
-    @classmethod
-    def can_watch_all_invite_links(cls, got_rights: str) -> bool:
-        return got_rights in [cls.admin, cls.owner]
+    @staticmethod
+    def can_watch_all_invite_links(got_rights: str) -> bool:
+        return got_rights in [Group_roles.admin, Group_roles.owner]
 
-    @classmethod
-    def can_delete_invite_link(cls, got_rights: str) -> bool:
-        return got_rights in [cls.admin, cls.owner]
+    @staticmethod
+    def can_delete_invite_link(got_rights: str) -> bool:
+        return got_rights in [Group_roles.admin, Group_roles.owner]
 
-    @classmethod
-    def can_watch_users(cls, got_rights: str) -> bool:
-        return got_rights in [cls.admin, cls.owner]
+    @staticmethod
+    def can_watch_users(got_rights: str) -> bool:
+        return got_rights in [Group_roles.admin, Group_roles.owner]
 
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+    image = Column(String)
+
+class Group(Base):
+    __tablename__ = "groups"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(Integer, index=True, unique=True)
+    logo = Column(String)
 
 class Poll(Base):
     __tablename__ = "polls"

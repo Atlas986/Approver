@@ -5,11 +5,11 @@ from pydantic.types import StrictBool
 
 class User(BaseModel):
     username:str
-    email:str
-
+    id: int
     class Config:
         from_attributes = True
-class UserCreate(User):
+class UserCreate(BaseModel):
+    username:str
     password:str
 
 class UserCreateError(BaseModel):

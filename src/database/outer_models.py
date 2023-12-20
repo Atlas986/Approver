@@ -5,18 +5,9 @@ from . import BaseModel
 from . import models
 
 
-class AlreadyInGroupException(Exception):
-    def __init__(self):
-        pass
-    def __str__(self):
-        return f'{self.__class__.__name__} raised. Can`t use invite link since user is already in group.'
-
-
 class User(BaseModel):
 
     id: int
-    email: str
-    password: str
     username: str
     first_name: Optional[str]
     last_name: Optional[str]
@@ -30,13 +21,6 @@ class Group(BaseModel):
 Group_roles = models.Group_roles
 
 Base_group_roles = models.Base_group_roles
-
-class Invite_link_status(NativeEnum):
-    active = "active"
-    usage_limit_exceeded = "usage_limit_exceeded"
-    expired = "expired"
-    not_found = "not_found"
-
 class USER_GROUP_relationship(BaseModel):
     id : int
 
