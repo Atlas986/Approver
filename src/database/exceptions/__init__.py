@@ -1,1 +1,1 @@
-from . import user, group, relationship, invite_group_link
+from . import user, group, relationship, invite_group_link, file

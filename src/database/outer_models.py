@@ -49,4 +49,11 @@ class Join_group_invite(BaseModel):
     for_whom_id: int
     created_by_id: int
 
+class File(BaseModel):
+    id:str
+    created_at: datetime
+    filename: str
+    created_by_id: int
+    path: str
+
 

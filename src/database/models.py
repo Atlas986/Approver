@@ -162,5 +162,16 @@ class POLL_GROUPS(Base):
     group_id = Column(ForeignKey('groups.id'))
     added_by = Column(ForeignKey('users.id'))
 
+class File(Base):
+    __tablename__ = "files"
+
+    id = Column(String, primary_key=True, index=True)
+
+    path = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    filename = Column(String, primary_key=True, index=True)
+
+    created_by_id = Column(ForeignKey('users.id'))
+
 
 

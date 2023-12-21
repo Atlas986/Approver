@@ -13,6 +13,7 @@ app.include_router(auth.router)
 app.include_router(group.router)
 app.include_router(invite_group_link.router)
 app.include_router(join_group_invite.router)
+app.include_router(file.router)
 
 
 if __name__ == "__main__":
