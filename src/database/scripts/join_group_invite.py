@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.database import outer_models, models, exceptions
 from src.database.scripts.utils import get_by, create_hash, get_user_group_relationship, delete_by, \
-    get_invite_link_by_id
+    safe_get_invite_link_by_id
 from src.utils import remove_null_arguments
 
 
@@ -25,12 +25,18 @@ class for_user:
 class create:
     already_in_group = exceptions.relationship.AlreadyInGroup
     forbidden = exceptions.group.Forbidden
+    already_invited = exceptions.join_group_invite.AlreadyInvited
 
+    @staticmethod
     def execute(db:Session, created_by_id:int, for_whom_id:int, group_id:int, role:models.Base_group_roles):
         try:
             relationship = get_user_group_relationship(db, for_whom_id, group_id)
             if relationship is not None:
                 raise create.already_in_group
+            invite = db.query(models.Join_group_invite).filter(models.Join_group_invite.for_whom_id == for_whom_id,
+                                                               models.Join_group_invite.group_id == group_id).first()
+            if invite is not None:
+                raise create.already_invited
             relationship = get_user_group_relationship(db, created_by_id, group_id)
             if not outer_models.Group_roles.can_create_invite_link(relationship.role, role):
                 raise create.forbidden
@@ -46,9 +52,10 @@ class create:
 
 
 class accept:
-    invite_not_found = exceptions.invite_group_link.NotFound
+    invite_not_found = exceptions.join_group_invite.NotFound
     already_in_group = exceptions.relationship.AlreadyInGroup
 
+    @staticmethod
     def execute(db:Session, user_id:int, invite_id:int):
         try:
             try:
@@ -73,7 +80,7 @@ class accept:
 
 
 class decline:
-    invite_not_found = exceptions.invite_group_link.NotFound
+    invite_not_found = exceptions.join_group_invite.NotFound
 
     def execute(db:Session, user_id:int, invite_id:int):
         try:

@@ -23,6 +23,7 @@ def get_join_group_invites_created_by_me(db:Session = Depends(database.utils.get
     user_id = credentials.subject["id"]
     return [schemas.JoinGroupInvite.model_validate(i) for i in join_group_invite.created_by_user.execute(db, user_id)]
 
+
 @router.get("/for_me",
             responses={
                 401:{}
@@ -54,6 +55,8 @@ def create_join_group_invite(invite:schemas.JoinGroupInviteCreate,
         raise HTTPException(status_code=400)
     except join_group_invite.create.forbidden:
         raise HTTPException(status_code=403)
+    except join_group_invite.create.already_invited:
+        raise HTTPException(status_code=400)
 
 
 @router.post("/accept",

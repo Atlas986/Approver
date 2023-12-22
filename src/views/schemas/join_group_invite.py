@@ -7,7 +7,6 @@ import src.database as database
 from .group import Group_roles_without_owner
 from ...database.outer_models import Base_group_roles
 
-
 class RestrictedJoinGroupInvite(BaseModel):
     id: int
     created_at: datetime

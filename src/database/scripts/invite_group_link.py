@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.database import outer_models, models, exceptions
 from src.database.scripts.utils import get_by, create_hash, get_user_group_relationship, delete_by, \
-    get_invite_link_by_id
+    safe_get_invite_link_by_id
 from src.utils import remove_null_arguments
 
 
@@ -56,12 +56,13 @@ class for_group:
     not_in_group = exceptions.relationship.NotFound
     forbidden = exceptions.group.Forbidden
 
+    @staticmethod
     def execute(db: Session, user_id:int, group_id: int) -> list[outer_models.Invite_group_link]:
         relationship = get_user_group_relationship(db, user_id, group_id)
         if relationship is None:
             raise for_group.not_in_group
 
-        if not outer_models.Group_roles.can_watch_all_invite_links(relationship.role):
+        if not models.Group_roles.can_watch_all_invite_links(relationship.role):
             raise create.forbidden
         return [outer_models.Invite_group_link.model_validate(i) for i in get_by(db, models.Invite_group_link, models.Invite_group_link.group_id, group_id)]
 
@@ -69,6 +70,7 @@ class delete_by_id:
     link_not_found = exceptions.invite_group_link.NotFound
     forbidden = exceptions.group.Forbidden
 
+    @staticmethod
     def execute(db:Session, user_id:int, link_id:str):
         try:
             try:
@@ -88,9 +90,10 @@ class delete_by_id:
 class get_by_id:
     link_not_found = exceptions.invite_group_link.NotFound
 
+    @staticmethod
     def execute(db:Session, id:str) -> outer_models.Invite_group_link:
         try:
-            return outer_models.Invite_group_link.model_validate(get_invite_link_by_id.execute(db, id))
+            return outer_models.Invite_group_link.model_validate(safe_get_invite_link_by_id.execute(db, id))
         except Exception:
             raise get_by_id.link_not_found
 
@@ -98,10 +101,11 @@ class use:
     link_not_found = exceptions.invite_group_link.NotFound
     already_in_group = exceptions.relationship.AlreadyInGroup
 
+    @staticmethod
     def execute(db:Session, user_id:int, link_id:str):
         try:
             try:
-                link = get_invite_link_by_id.execute(db, link_id)
+                link = safe_get_invite_link_by_id.execute(db, link_id)
             except Exception:
                 raise use.link_not_found
             user:models.User = get_by(db, models.User, models.User.id, user_id)[0]

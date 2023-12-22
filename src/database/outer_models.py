@@ -49,11 +49,40 @@ class Join_group_invite(BaseModel):
     for_whom_id: int
     created_by_id: int
 
+    class Join_poll_invite(BaseModel):
+        id: int
+        created_at: datetime
+        poll_id: int
+        for_whom_id: int
+
+
 class File(BaseModel):
     id:str
     created_at: datetime
     filename: str
     created_by_id: int
     path: str
+
+class Poll(BaseModel):
+    id:int
+    title: str
+    document_id: str
+    created_at: datetime
+    deadline: Optional[datetime]
+    result_url:Optional[str]
+
+    state: models.Poll_states
+
+    voted_for: int
+    voted_against: int
+    voters_limit: Optional[int]
+
+    owner_id: int
+
+class Join_poll_invite(BaseModel):
+    id: int
+    created_at: datetime
+    poll_id: int
+    for_whom_id: int
 
 

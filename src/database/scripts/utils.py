@@ -20,6 +20,10 @@ def get_user_group_relationship(db: Session, user_id: int, group_id: int) -> mod
     return db.query(models.GROUP_USERS).filter(models.GROUP_USERS.group_id == group_id,
                                                models.GROUP_USERS.user_id == user_id).first()
 
+def get_poll_group_relationship(db:Session, poll_id:int, group_id:int) -> models.POLL_GROUPS:
+    return db.query(models.POLL_GROUPS).filter(models.POLL_GROUPS.group_id == group_id,
+                                               models.POLL_GROUPS.poll_id == poll_id).first()
+
 def delete_by(db:Session, table:declarative_base, column:Column, value:Any):
     try:
         db.execute(delete(table).where(column == value))
@@ -28,7 +32,7 @@ def delete_by(db:Session, table:declarative_base, column:Column, value:Any):
         db.rollback()
         raise e
 
-class get_invite_link_by_id:
+class safe_get_invite_link_by_id:
     link_not_found = exceptions.invite_group_link.NotFound
     expired = exceptions.invite_group_link.Expired
     usage_limit_exceeded = exceptions.invite_group_link.Usage_limit_exceeded
@@ -37,10 +41,36 @@ class get_invite_link_by_id:
         try:
             link:models.Invite_group_link = get_by(db, models.Invite_group_link, models.Invite_group_link.id, id)[0]
         except Exception:
-            raise get_invite_link_by_id.link_not_found
+            raise safe_get_invite_link_by_id.link_not_found
         if not (link.expires is None or (link.expires and link.expires >= datetime.now())):
-            raise get_invite_link_by_id.expired
+            raise safe_get_invite_link_by_id.expired
         if not (link.usage_limit is None or (link.usage_limit and link.usage_limit > 0)):
-            raise get_invite_link_by_id.usage_limit_exceeded
+            raise safe_get_invite_link_by_id.usage_limit_exceeded
         return link
+
+
+class safe_get_poll_by_id:
+    poll_not_found = exceptions.poll.NotFound
+    @staticmethod
+    def execute(db:Session, id:int) -> models.Poll:
+        try:
+            try:
+                poll:models.Poll = get_by(db, models.Poll, models.Poll.id, id)[0]
+            except Exception:
+                raise safe_get_poll_by_id.poll_not_found
+            if poll.deadline is not None and poll.deadline < datetime.now():
+                poll.state = models.Poll_states.frozen
+            if poll.voters_limit is not None and (poll.voters_limit <= poll.voted_for + poll.voted_against):
+                poll.state = models.Poll_states.frozen
+            db.commit()
+            return poll
+        except Exception as e:
+            db.rollback()
+            raise e
+
+
+def safe_get_polls_by_user_id(db:Session, owner_id:int) -> list[models.Poll]:
+    polls:list[models.Poll] = get_by(db, models.Poll, models.Poll.owner_id, owner_id)
+    return [safe_get_poll_by_id.execute(db, i.id) for i in polls]
+
 

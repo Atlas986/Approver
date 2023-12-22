@@ -38,7 +38,7 @@ def create_invite_link(invite_link:schemas.InviteLinkCreate,
         raise HTTPException(status_code=403)
 
 
-@router.get("/by_user",
+@router.get("/created_by_me",
             response_model=list[schemas.InviteLink],
             responses={
                 401 : {},

@@ -53,6 +53,21 @@ class Group_roles(NativeEnum):
     def can_watch_users(got_rights: str) -> bool:
         return got_rights in [Group_roles.admin, Group_roles.owner]
 
+    @staticmethod
+    def can_watch_join_poll_invites(got_rights:str) -> bool:
+        return got_rights == Group_roles.owner
+
+    @staticmethod
+    def can_accept_join_poll_invites(got_rights:str) -> bool:
+        return got_rights == Group_roles.owner
+
+
+class Poll_states(NativeEnum):
+    active = "active"
+    frozen = "frozen"
+
+
+
 
 class User(Base):
     __tablename__ = "users"
@@ -72,17 +87,20 @@ class Group(Base):
 
 class Poll(Base):
     __tablename__ = "polls"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, primary_key=True, index=True)
-    document_url = Column(String)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    title = Column(String, index=True)
+    document_id = Column(ForeignKey('files.id'))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     deadline = Column(DateTime(timezone=True))
     result_url = Column(String)
 
-    # state = Column(ENUM('completed', 'freezed'))
-    state = Column(String)
+    state = Column(ENUM(Poll_states))
 
-    group_owner_id = Column(ForeignKey('groups.id'))
+    voted_for = Column(Integer, default=0)
+    voted_against = Column(Integer, default=0)
+    voters_limit = Column(Integer)
+
+    owner_id = Column(Integer)
 
 
 class Comment(Base):
@@ -135,6 +153,13 @@ class Share_poll_link(Base):
     poll_id = Column(ForeignKey('polls.id'))
     created_by_id = Column(ForeignKey('users.id'))
 
+class Join_poll_invite(Base):
+    __tablename__ = "join_poll_invites"
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    poll_id = Column(ForeignKey('polls.id'))
+    for_whom_id = Column(Integer)
+
 class GROUP_USERS(Base):
     __tablename__ = "group_users_relations"
 
@@ -155,12 +180,8 @@ class POLL_GROUPS(Base):
 
     added_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # role = Column(ENUM())
-    role = Column(String)
-
     poll_id = Column(ForeignKey('polls.id'))
     group_id = Column(ForeignKey('groups.id'))
-    added_by = Column(ForeignKey('users.id'))
 
 class File(Base):
     __tablename__ = "files"

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.database import outer_models, models, exceptions
 from src.database.scripts.utils import get_by, create_hash, get_user_group_relationship, delete_by, \
-    get_invite_link_by_id
+    safe_get_invite_link_by_id
 from src.utils import remove_null_arguments
 
 class create:

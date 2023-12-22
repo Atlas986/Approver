@@ -10,7 +10,7 @@ class create:
     name_taken = exceptions.group.NameTaken
 
     @staticmethod
-    def execute(cls, db:Session, name:str, user_id:int) -> outer_models.Group:
+    def execute(db:Session, name:str, user_id:int) -> outer_models.Group:
         try:
             try:
                 user:models.User = get_by(db, models.User, models.User.id, user_id)[0]

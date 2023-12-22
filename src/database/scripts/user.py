@@ -6,10 +6,12 @@ from src.database.scripts.utils import get_by, create_hash
 
 class login:
     auth_failed = exceptions.user.AuthFailed
-
     @staticmethod
     def execute(db:Session, username:str = None, password:str = None) -> outer_models.User:
-        user:models.User = get_by(db, models.User, models.User.username, username)[0]
+        try:
+            user:models.User = get_by(db, models.User, models.User.username, username)[0]
+        except Exception:
+            raise login.auth_failed
         if user.password == create_hash(password):
             return outer_models.User.model_validate(user)
         else:
