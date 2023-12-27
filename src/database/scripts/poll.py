@@ -61,3 +61,42 @@ class for_group:
             raise for_group.not_in_group
         return [outer_models.Poll.model_validate(safe_get_poll_by_id.execute(db, i.poll_id))
                 for i in get_by(db, models.POLL_GROUPS, models.POLL_GROUPS.group_id, group_id)]
+
+
+class vote:
+    user_not_in_group = exceptions.relationship.NotFound
+    forbidden = exceptions.group.Forbidden
+    group_not_in_poll = exceptions.relationship.NotFound
+    already_frozen = exceptions.poll.AlreadyFrozen
+    already_voted = exceptions.vote.AlreadyVoted
+    @staticmethod
+    def execute(db:Session, user_id:int, group_id:int, poll_id:int, accepted:bool):
+        try:
+            relationship = get_user_group_relationship(db, user_id, group_id)
+            if relationship is None:
+                raise vote.user_not_in_group
+            if not models.Group_roles.can_vote(relationship.role):
+                raise vote.forbidden
+            relationship:models.POLL_GROUPS = db.query(models.POLL_GROUPS).filter(models.POLL_GROUPS.group_id == group_id,
+                                                               models.POLL_GROUPS.poll_id == poll_id).first()
+            if relationship is None:
+                raise vote.group_not_in_poll
+            if relationship.role is not models.Poll_roles.voter:
+                raise vote.forbidden
+            poll = safe_get_poll_by_id.execute(db, poll_id)
+            if poll.state == models.Poll_states.frozen:
+                raise vote.already_frozen
+            if db.query(models.Vote).filter(models.Vote.poll_id == poll_id,
+                                            models.Vote.voter_id == user_id).first() is not None:
+                raise vote.already_voted
+            if accepted:
+                poll.voted_for = poll.voted_for + 1
+            else:
+                poll.voted_against = poll.voted_against + 1
+            db_vote = models.Vote(voter_id=user_id, poll_id=poll_id, accepted=accepted)
+            db.add(db_vote)
+            db.commit()
+            safe_get_poll_by_id.execute(db, poll_id)
+        except Exception as e:
+            db.rollback()
+            raise e

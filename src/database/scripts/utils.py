@@ -1,10 +1,14 @@
+import json
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, BinaryIO
+import io
 
 from sqlalchemy import Column, delete
 from sqlalchemy.orm import Session, declarative_base
 
 from src.database import models, outer_models, exceptions
+from src.database.scripts import file
+from io import StringIO
 
 
 def create_hash(value:str):
@@ -58,10 +62,16 @@ class safe_get_poll_by_id:
                 poll:models.Poll = get_by(db, models.Poll, models.Poll.id, id)[0]
             except Exception:
                 raise safe_get_poll_by_id.poll_not_found
+            changed = False
             if poll.deadline is not None and poll.deadline < datetime.now():
                 poll.state = models.Poll_states.frozen
+                changed = True
             if poll.voters_limit is not None and (poll.voters_limit <= poll.voted_for + poll.voted_against):
                 poll.state = models.Poll_states.frozen
+                changed = True
+            if changed:
+                result = {'voted_for' : poll.voted_for, 'voted_against' : poll.voted_against}
+                poll.result_id = file.create.execute(db, io.BytesIO(str.encode(str(json.dumps(result)))), 'result.json').id
             db.commit()
             return poll
         except Exception as e:
@@ -72,5 +82,4 @@ class safe_get_poll_by_id:
 def safe_get_polls_by_user_id(db:Session, owner_id:int) -> list[models.Poll]:
     polls:list[models.Poll] = get_by(db, models.Poll, models.Poll.owner_id, owner_id)
     return [safe_get_poll_by_id.execute(db, i.id) for i in polls]
-
 

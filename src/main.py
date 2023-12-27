@@ -16,6 +16,7 @@ app.include_router(join_group_invite.router)
 app.include_router(file.router)
 app.include_router(poll.router)
 app.include_router(join_poll_invite.router)
+app.include_router(vote.router)
 
 
 if __name__ == "__main__":

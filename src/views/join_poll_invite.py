@@ -19,7 +19,7 @@ def create_join_poll_invite(invite:schemas.JoinPollInviteCreate,
                              credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
     try:
-        join_poll_invite.create.execute(db, user_id, invite.poll_id, invite.for_whom_id)
+        join_poll_invite.create.execute(db, user_id, invite.poll_id, invite.for_whom_id, invite.role)
 
     except join_poll_invite.create.already_invited:
         raise HTTPException(status_code=400)

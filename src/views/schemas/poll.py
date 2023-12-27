@@ -16,8 +16,9 @@ class Poll_states(enum.StrEnum):
 class PollCreate(BaseModel):
     title: str
     document_id: str
-    expires: Optional[datetime] = None
+    expires: Optional[timedelta] = None
     voters_limit: Optional[int] = None
+
 
 class Poll(BaseModel):
     id: int
@@ -25,7 +26,7 @@ class Poll(BaseModel):
     document_id: str
     created_at: datetime
     deadline: Optional[datetime] = None
-    result_url: Optional[str] = None
+    result_id: Optional[str] = None
 
     state: Poll_states
 
@@ -36,6 +37,7 @@ class Poll(BaseModel):
 class RestrictedPoll(BaseModel):
     id: int
     title: str
+    document_id: str
     created_at: datetime
     deadline: Optional[datetime] = None
     voters_limit: Optional[int] = None

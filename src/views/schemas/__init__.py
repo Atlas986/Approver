@@ -12,3 +12,4 @@ from .join_group_invite import *
 from .file import *
 from .poll import *
 from .join_poll_invite import *
+from .vote import *

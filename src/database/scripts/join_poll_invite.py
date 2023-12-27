@@ -21,7 +21,7 @@ class create:
     already_frozen = exceptions.join_poll_invite.AlreadyFrozen
 
     @staticmethod
-    def execute(db:Session, created_by_id:int, poll_id: int, for_whom_id: int):
+    def execute(db:Session, created_by_id:int, poll_id: int, for_whom_id: int, role:models.Poll_roles):
         try:
             try:
                 poll = safe_get_poll_by_id.execute(db, poll_id)
@@ -42,7 +42,7 @@ class create:
                 raise create.already_invited
             if poll.owner_id != created_by_id:
                 raise create.forbidden
-            invite = models.Join_poll_invite(poll_id=poll_id, for_whom_id=for_whom_id)
+            invite = models.Join_poll_invite(poll_id=poll_id, for_whom_id=for_whom_id, role=role)
             db.add(invite)
             db.commit()
 
@@ -87,7 +87,7 @@ class accept:
             relationship = get_poll_group_relationship(db, invite.poll_id, invite.for_whom_id)
             if relationship is not None:
                 raise accept.already_in_poll
-            relationship = models.POLL_GROUPS(poll_id=invite.poll_id, group_id=invite.for_whom_id)
+            relationship = models.POLL_GROUPS(poll_id=invite.poll_id, group_id=invite.for_whom_id, role=invite.role)
             db.add(relationship)
             db.delete(invite)
             db.commit()

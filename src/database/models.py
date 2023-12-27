@@ -61,6 +61,13 @@ class Group_roles(NativeEnum):
     def can_accept_join_poll_invites(got_rights:str) -> bool:
         return got_rights == Group_roles.owner
 
+    @staticmethod
+    def can_vote(got_rights:str) -> bool:
+        return True
+
+class Poll_roles(NativeEnum):
+    viewer = "viewer"
+    voter = "voter"
 
 class Poll_states(NativeEnum):
     active = "active"
@@ -92,7 +99,7 @@ class Poll(Base):
     document_id = Column(ForeignKey('files.id'))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     deadline = Column(DateTime(timezone=True))
-    result_url = Column(String)
+    result_id = Column(String)
 
     state = Column(ENUM(Poll_states))
 
@@ -159,6 +166,7 @@ class Join_poll_invite(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     poll_id = Column(ForeignKey('polls.id'))
     for_whom_id = Column(Integer)
+    role = Column(ENUM(Poll_roles))
 
 class GROUP_USERS(Base):
     __tablename__ = "group_users_relations"
@@ -179,6 +187,7 @@ class POLL_GROUPS(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     added_at = Column(DateTime(timezone=True), server_default=func.now())
+    role = Column(ENUM(Poll_roles))
 
     poll_id = Column(ForeignKey('polls.id'))
     group_id = Column(ForeignKey('groups.id'))
@@ -193,6 +202,14 @@ class File(Base):
     filename = Column(String, primary_key=True, index=True)
 
     created_by_id = Column(ForeignKey('users.id'))
+
+class Vote(Base):
+    __tablename__ = 'votes'
+    id = Column(Integer, primary_key=True, index=True)
+    voter_id = Column(ForeignKey('users.id'))
+    poll_id = Column(ForeignKey('polls.id'))
+    accepted = Column(Boolean)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 

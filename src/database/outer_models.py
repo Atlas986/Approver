@@ -19,7 +19,7 @@ class Group(BaseModel):
     logo: Optional[str]
 
 Group_roles = models.Group_roles
-
+Poll_roles = models.Poll_roles
 Base_group_roles = models.Base_group_roles
 class USER_GROUP_relationship(BaseModel):
     id : int
@@ -60,7 +60,7 @@ class File(BaseModel):
     id:str
     created_at: datetime
     filename: str
-    created_by_id: int
+    created_by_id: Optional[int] = None
     path: str
 
 class Poll(BaseModel):
@@ -69,7 +69,7 @@ class Poll(BaseModel):
     document_id: str
     created_at: datetime
     deadline: Optional[datetime]
-    result_url:Optional[str]
+    result_id:Optional[str]
 
     state: models.Poll_states
 
@@ -84,5 +84,6 @@ class Join_poll_invite(BaseModel):
     created_at: datetime
     poll_id: int
     for_whom_id: int
+    role: Poll_roles
 
 

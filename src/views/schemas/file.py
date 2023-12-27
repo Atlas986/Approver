@@ -10,4 +10,4 @@ class File(BaseModel):
     id:str
     created_at: datetime
     filename: str
-    created_by_id: int
+    created_by_id: Optional[int] = None
