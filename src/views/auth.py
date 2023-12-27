@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Security
 from fastapi_jwt import JwtAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.config import jwt_config
 from . import schemas
 import src.database as database
