@@ -1,19 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends, Security
 from fastapi_jwt import JwtAuthorizationCredentials
+
+from src.database.utils import get_session
 from src.config import jwt_config
 from . import schemas
-import src.database as database
-import src.database.scripts as db_scripts
-from ..database.scripts import user as db_user
+from src.database.scripts import user as db_user
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
 
 
 @router.post('/login', response_model=schemas.AuthSchema,
              responses={
-                 401 : {'description' : 'Incorrect auth data'},
+                 401: {'description': 'Incorrect auth data'},
              })
-def login(user: schemas.UserSignin, session = Depends(database.utils.get_session)):
+def login(user: schemas.UserSignin, session=Depends(get_session)):
     try:
         user_data = db_user.login.execute(db=session, username=user.username, password=user.password)
     except db_user.login.auth_failed:

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from database import models
-from database.database import engine
+from src.database import models
+from src.database.database import engine
 from src.views import *
 
 models.Base.metadata.create_all(bind=engine)
@@ -18,9 +18,7 @@ app.include_router(poll.router)
 app.include_router(join_poll_invite.router)
 app.include_router(vote.router)
 
-
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="localhost", port=8080)
-
+    uvicorn.run("src.main:app", host="localhost", port=8080)

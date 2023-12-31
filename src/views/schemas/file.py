@@ -1,13 +1,11 @@
-import enum
+from datetime import datetime
 from typing import Optional
 
-from . import BaseModel
-from datetime import datetime, timedelta
-import src.database as database
-from .group import Group_roles_without_owner
+from src.database.models import BaseModel
+
 
 class File(BaseModel):
-    id:str
+    id: str
     created_at: datetime
     filename: str
     created_by_id: Optional[int] = None

@@ -8,7 +8,7 @@ class AlreadyInvited(Exception):
 
 class NotFound(Exception):
     def __init__(self, **kwargs):
-        self.kwargs=kwargs
+        self.kwargs = kwargs
 
     def __str__(self):
         return f'Cannot find Join_group_invite.'
