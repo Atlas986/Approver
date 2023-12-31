@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from database import models
 from database.database import engine
 from src.views import *
-
 models.Base.metadata.create_all(bind=engine)
+import requests
 
 app = FastAPI()
 

@@ -45,11 +45,10 @@ def get_polls_for_group(group_id:int,
     except db_poll.for_group.not_in_group:
         raise HTTPException(status_code=400)
 
-@router.get('/info',
-            response_model=schemas.RestrictedPoll)
-def get_poll_info(poll_id:int,
+@router.get('/get_info',
+            response_model=list[schemas.Poll])
+def get_poll_info(poll_id:int = None,
+                  group_id:int = None,
+                  file_id:str = None,
                   db: Session = Depends(database.utils.get_session)):
-    try:
-        return schemas.RestrictedPoll.model_validate(db_poll.safe_get_poll_by_id.execute(db, poll_id))
-    except db_poll.safe_get_poll_by_id.poll_not_found:
-        raise HTTPException(status_code=404)
+    return [schemas.Poll.model_validate(i) for i in db_poll.get_info.execute(db, file_id, group_id, poll_id)]
