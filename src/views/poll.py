@@ -47,19 +47,10 @@ def get_polls_for_group(group_id: int,
         raise HTTPException(status_code=400)
 
 
-@router.get('/info',
-            response_model=schemas.RestrictedPoll)
-def get_poll_info(poll_id: int,
+@router.get('/get_info',
+            response_model=list[schemas.Poll])
+def get_poll_info(poll_id: int | None = None,
+                  group_id: int | None = None,
+                  file_id: str | None = None,
                   db: Session = Depends(get_session)):
-    try:
-        return schemas.RestrictedPoll.model_validate(db_poll.safe_get_poll_by_id.execute(db, poll_id))
-    except db_poll.safe_get_poll_by_id.poll_not_found:
-        raise HTTPException(status_code=404)
-
-
-@router.get('/info/by-document',
-            response_model=schemas.RestrictedPoll)
-def get_poll_info_by_document(document_id: int,
-                              db: Session = Depends(get_session)):
-    stmt = select(models.Poll).where(models.Poll.document_id == document_id)
-    return db.scalars(stmt).all()
+    return [schemas.Poll.model_validate(i) for i in db_poll.get_info.execute(db, file_id, group_id, poll_id)]
