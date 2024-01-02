@@ -3,15 +3,14 @@ from src.database.models import BaseModel
 
 class User(BaseModel):
     username: str
+    image: str
     id: int
-
-    class Config:
-        from_attributes = True
 
 
 class UserCreate(BaseModel):
     username: str
     password: str
+    image: str | None = None
 
 
 class UserCreateError(BaseModel):

@@ -6,7 +6,10 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
+from urllib.parse import quote_plus
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+DICEBEAR_URL = "https://api.dicebear.com/7.x/identicon/svg?seed="
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
 Base = declarative_base()
@@ -94,7 +97,7 @@ class User(Base):
     password = Column(String)
     first_name = Column(String)
     last_name = Column(String)
-    image = Column(String)
+    image = Column(String, default=lambda context: DICEBEAR_URL+quote_plus(context.get_current_parameters()["username"]))
 
 
 class Group(Base):
