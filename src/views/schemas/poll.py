@@ -1,11 +1,11 @@
-import enum
+from enum import Enum
 from datetime import datetime, timedelta
 from typing import Optional
 
 from src.database.models import BaseModel
 
 
-class Poll_states(enum.StrEnum):
+class Poll_states(Enum):
     active = "active"
     frozen = "frozen"
 

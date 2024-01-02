@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 from datetime import timedelta
 from typing import Optional
 
@@ -24,7 +24,7 @@ class InviteLinkCreate(BaseModel):
     role: Group_roles_without_owner
 
 
-class Invite_link_status(enum.StrEnum):
+class Invite_link_status(Enum):
     usage_limit_exceeded = "usage_limit_exceeded"
     expired = "expired"
     not_found = "not_found"

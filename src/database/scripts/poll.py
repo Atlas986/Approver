@@ -101,14 +101,20 @@ class vote:
             db.rollback()
             raise e
 
+
 class get_info:
     @staticmethod
-    def execute(db, file_id:Optional[str], group_id:Optional[int], poll_id:Optional[int]) -> list[outer_models.Poll]:
+    def execute(db,
+                file_id: Optional[str],
+                group_id: Optional[int],
+                poll_id: Optional[int],
+                ) -> list[outer_models.Poll]:
         if file_id is not None:
-            i:models.Poll = None
-            return [outer_models.Poll.model_validate(safe_get_poll_by_id.execute(db, i.id)) for i in get_by(db, models.Poll, models.Poll.document_id, file_id)]
+            i: models.Poll = None
+            return [outer_models.Poll.model_validate(safe_get_poll_by_id.execute(db, i.id)) for i in get_by(db, models.Poll, models.Poll.file_id, file_id)]
         if group_id is not None:
-            i:models.POLL_GROUPS = None
+            i: models.POLL_GROUPS = None
             return [outer_models.Poll.model_validate(safe_get_poll_by_id.execute(db, i.poll_id)) for i in get_by(db, models.POLL_GROUPS, models.POLL_GROUPS.group_id, group_id)]
         if poll_id is not None:
             return [outer_models.Poll.model_validate(safe_get_poll_by_id.execute(db, poll_id))]
+        return []
