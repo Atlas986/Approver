@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 
-
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearerCookie
 
 

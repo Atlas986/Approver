@@ -1,19 +1,19 @@
-import enum
+from enum import Enum
+from datetime import timedelta
 from typing import Optional
 
-from . import BaseModel
-from datetime import datetime, timedelta
-import src.database as database
+from src.database import outer_models
+from src.database.models import BaseModel
 from .group import Group_roles_without_owner
 
 
-class InviteLink(database.outer_models.Invite_group_link):
+class InviteLink(outer_models.Invite_group_link):
     pass
 
 
 class RestrictedInviteLink(BaseModel):
     id: str
-    role: database.outer_models.Base_group_roles
+    role: outer_models.BaseGroupRoles
     group_id: int
 
 
@@ -23,11 +23,12 @@ class InviteLinkCreate(BaseModel):
     expires: Optional[timedelta] = None
     role: Group_roles_without_owner
 
-class Invite_link_status(enum.StrEnum):
+
+class Invite_link_status(Enum):
     usage_limit_exceeded = "usage_limit_exceeded"
     expired = "expired"
     not_found = "not_found"
 
 
 class InviteLinkNotFoundError(BaseModel):
-    status:Invite_link_status
+    status: Invite_link_status
