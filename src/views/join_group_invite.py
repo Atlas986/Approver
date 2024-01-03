@@ -5,10 +5,11 @@ from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 import src.database as database
-from . import schemas
+from . import schemas, generate_response_schemas
 from fastapi import Depends, FastAPI, HTTPException
 
 from ..config import jwt_config
+from ..database.exceptions import BaseDbException
 from ..database.scripts import join_group_invite
 
 router = APIRouter(prefix='/join_group_invites', tags=['Join_group_invites'])
@@ -35,11 +36,7 @@ def get_join_group_invites_for_me(db:Session = Depends(database.utils.get_sessio
     return [schemas.RestrictedJoinGroupInvite.model_validate(i) for i in join_group_invite.for_user.execute(db, user_id)]
 
 @router.post("/create",
-             responses={
-                 400: {"description" : "User is already in group"},
-                 401: {},
-                 403:{"description" : "Access forbidden due to user rights"},
-             })
+             responses=generate_response_schemas(join_group_invite.create))
 def create_join_group_invite(invite:schemas.JoinGroupInviteCreate,
                              db:Session = Depends(database.utils.get_session),
                              credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
@@ -51,44 +48,32 @@ def create_join_group_invite(invite:schemas.JoinGroupInviteCreate,
                                          for_whom_id=invite.for_whom_id,
                                          role=invite.role)
 
-    except join_group_invite.create.already_in_group:
-        raise HTTPException(status_code=400)
-    except join_group_invite.create.forbidden:
-        raise HTTPException(status_code=403)
-    except join_group_invite.create.already_invited:
-        raise HTTPException(status_code=400)
+    except BaseDbException as e:
+        status_code, message = e.generate_http_exception()
+        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
 
 
 @router.post("/accept",
-             responses={
-                 400:{"description" : "User is already in group"},
-                 401:{},
-                 404:{"description" : "Invite not found"},
-             })
+             responses=generate_response_schemas(join_group_invite.accept))
 def accept_invite(invite_id:int,
                   db: Session = Depends(database.utils.get_session),
                   credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
     try:
         join_group_invite.accept.execute(db, user_id=user_id, invite_id=invite_id)
-
-    except join_group_invite.accept.already_in_group:
-        raise HTTPException(status_code=400)
-    except join_group_invite.accept.invite_not_found:
-        raise HTTPException(status_code=404)
+    except BaseDbException as e:
+        status_code, message = e.generate_http_exception()
+        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
 
 @router.post("/decline",
-             responses={
-                 401:{},
-                 404:{"description" : "Invite not found"}
-             })
+             responses=generate_response_schemas(join_group_invite.decline))
 def decline_invite(invite_id:int,
                   db: Session = Depends(database.utils.get_session),
                   credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
     try:
         join_group_invite.decline.execute(db, user_id=user_id, invite_id=invite_id)
-
-    except join_group_invite.decline.invite_not_found:
-        raise HTTPException(status_code=404)
+    except BaseDbException as e:
+        status_code, message = e.generate_http_exception()
+        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
 

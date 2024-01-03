@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from fastapi.responses import FileResponse
 
 from src.config import jwt_config
-from . import schemas
+from . import schemas, generate_response_schemas
 import src.database as database
+from ..database.exceptions import BaseDbException
 from ..database.scripts import file as db_file
 
 router = APIRouter(prefix='/file', tags=['File'])
@@ -24,14 +25,12 @@ def upload_file(file:UploadFile,
 
 
 @router.get('/download',
-             responses={
-                 401: {},
-                 404: {"description" : "File not found"}
-             })
+             responses=generate_response_schemas(db_file.get_by_id))
 def download_file(file_id:str,
                   db:Session = Depends(database.utils.get_session)):
     try:
         file = db_file.get_by_id.execute(db, file_id)
-    except db_file.get_by_id.file_not_found:
-        raise HTTPException(status_code=404)
+    except BaseDbException as e:
+        status_code, message = e.generate_http_exception()
+        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
     return FileResponse(path=file.path, filename=file.filename)

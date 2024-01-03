@@ -83,3 +83,4 @@ def safe_get_polls_by_user_id(db:Session, owner_id:int) -> list[models.Poll]:
     polls:list[models.Poll] = get_by(db, models.Poll, models.Poll.owner_id, owner_id)
     return [safe_get_poll_by_id.execute(db, i.id) for i in polls]
 
+

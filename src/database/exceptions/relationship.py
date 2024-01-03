@@ -1,20 +1,33 @@
-class NotFound(Exception):
+from src.database.exceptions import BaseDbException
+
+
+class NotFound(BaseDbException):
+    class config:
+        status_code = 404
+        description = 'User_not_in_group'
+
     def __init__(self, **kwargs):
-        self.kwargs=kwargs
+        super().__init__(self.config)
 
     def __str__(self):
         return f'Cannot find relationship.'
 
-class AlreadyInGroup(Exception):
+class AlreadyInGroup(BaseDbException):
+    class config:
+        status_code = 400
+        description = 'User_is_already_in_group'
     def __init__(self, **kwargs):
-        self.kwargs=kwargs
+        super().__init__(self.config)
 
     def __str__(self):
         return f'User is already in group, can`t use invite link.'
 
-class AlreadyInPoll(Exception):
+class AlreadyInPoll(BaseDbException):
+    class config:
+        status_code = 400
+        description = 'User_is_already_in_poll'
     def __init__(self, **kwargs):
-        self.kwargs = kwargs
+        super().__init__(self.config)
 
     def __str__(self):
         return f'Group is already in poll, can`t use invite.'

@@ -5,19 +5,18 @@ from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 import src.database as database
-from . import schemas
+from . import schemas, generate_response_schemas
 from fastapi import Depends, FastAPI, HTTPException
 
 from ..config import jwt_config
+from ..database.exceptions import BaseDbException
 from ..database.scripts import user as db_user
 from ..database.scripts import user
 
 router = APIRouter(prefix='/users', tags=['User'])
 
 @router.post("/create",
-             responses={
-                 400: {"description" : "Username is already taken"},
-             })
+             responses=generate_response_schemas(db_user.create))
 def create_user(user: schemas.UserCreate,
                 db: Session = Depends(database.utils.get_session)):
     try:
@@ -25,8 +24,9 @@ def create_user(user: schemas.UserCreate,
                             password=user.password,
                             username=user.username)
 
-    except db_user.create.username_taken:
-        raise HTTPException(status_code=400)
+    except BaseDbException as e:
+        status_code, message = e.generate_http_exception()
+        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
 
 @router.get("/me",
             responses= {
