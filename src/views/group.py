@@ -3,6 +3,8 @@ from http import HTTPStatus
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
+
 from .schemas import Group_roles
 
 import src.database as database
@@ -27,8 +29,8 @@ def create_group(group: schemas.GroupCreate,
         return schemas.Group.model_validate(db_group.create.execute(db, name=group.name, user_id = user_id))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get("/my_groups",
             response_model=list[schemas.Group],
             responses={
@@ -50,8 +52,8 @@ def get_all_users_of_group(group_id:int,
         return [schemas.USER_GROUP_relationship.model_validate(i) for i in db_group.get_members.execute(db, user_id=user_id, group_id=group_id)]
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get("/group_info",
             response_model=schemas.Group,
             responses=generate_response_schemas(db_group.get_by_id))
@@ -61,8 +63,8 @@ def get_group_info(group_id:int,
         return schemas.Group.model_validate(db_group.get_by_id.execute(db, group_id))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get("/my_group_role",
             responses=generate_response_schemas(db_group.get_user_relationship),
             response_model=schemas.USER_GROUP_relationship)
@@ -74,4 +76,5 @@ def my_relationship_with_group(group_id:int,
         return schemas.USER_GROUP_relationship.model_validate(db_group.get_user_relationship.execute(db, user_id, group_id))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})

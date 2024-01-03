@@ -9,12 +9,12 @@ def generate_response_schemas(executable_class:Any):
     for key, value in d.items():
         a = {}
         for i in value:
-            a[' '.join(i.split('_'))] = {
+            mess = i['details']
+            id = i['id']
+            a[' '.join(mess.split('_'))] = {
                 'value' : {
-                    'detail': {
-                        'code' : key,
-                        'message' : i
-                    }
+                        'exception_id' : id,
+                        'message' : mess
                 }
             }
         d[key] = {'content': {'application/json': {"examples" : a}}}

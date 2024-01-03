@@ -5,6 +5,7 @@ class AlreadyInvited(BaseDbException):
     class config:
         status_code = 400
         description = 'Already_invited_for_poll'
+        id = 8
 
     def __init__(self, **kwargs):
         super().__init__(self.config)
@@ -16,6 +17,7 @@ class AlreadyFrozen(BaseDbException):
     class config:
         status_code = 410
         description = 'Poll_is_already_frozen'
+        id = 9
     def __init__(self, **kwargs):
         super().__init__(self.config)
 
@@ -26,6 +28,7 @@ class NotFound(BaseDbException):
     class config:
         status_code = 404
         description = 'Invite_not_found'
+        id = 10
 
     def __init__(self, **kwargs):
         super().__init__(self.config)

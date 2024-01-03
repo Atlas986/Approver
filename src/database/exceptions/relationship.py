@@ -5,6 +5,7 @@ class NotFound(BaseDbException):
     class config:
         status_code = 404
         description = 'User_not_in_group'
+        id = 15
 
     def __init__(self, **kwargs):
         super().__init__(self.config)
@@ -16,6 +17,7 @@ class AlreadyInGroup(BaseDbException):
     class config:
         status_code = 400
         description = 'User_is_already_in_group'
+        id = 16
     def __init__(self, **kwargs):
         super().__init__(self.config)
 
@@ -26,6 +28,7 @@ class AlreadyInPoll(BaseDbException):
     class config:
         status_code = 400
         description = 'User_is_already_in_poll'
+        id = 17
     def __init__(self, **kwargs):
         super().__init__(self.config)
 

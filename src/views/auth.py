@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Security
 from fastapi_jwt import JwtAuthorizationCredentials
+from starlette.responses import JSONResponse
+
 from src.config import jwt_config
 from . import schemas, generate_response_schemas
 import src.database as database
@@ -18,7 +20,8 @@ def login(user: schemas.UserSignin, session = Depends(database.utils.get_session
         user_data = db_user.login.execute(db=session, username=user.username, password=user.password)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code':status_code, 'message':message})
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
     access_token = jwt_config.access_security.create_access_token(subject={"id": user_data.id})
     refresh_token = jwt_config.refresh_security.create_refresh_token(subject={"id": user_data.id})
     return {"access_token": access_token, "refresh_token": refresh_token}

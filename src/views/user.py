@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 import src.database as database
 from . import schemas, generate_response_schemas
@@ -26,8 +27,8 @@ def create_user(user: schemas.UserCreate,
 
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get("/me",
             responses= {
                 401 : {}

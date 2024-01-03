@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 import src.database as database
 from . import schemas, generate_response_schemas
@@ -31,7 +32,8 @@ def create_invite_link(invite_link:schemas.InviteLinkCreate,
                                              expires=invite_link.expires))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 
 
 @router.get("/created_by_me",
@@ -55,7 +57,8 @@ def get_my_group_invite_links(group_id:int,
         return [schemas.InviteLink.model_validate(i) for i in invite_group_link.for_group.execute(db, user_id, group_id)]
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.delete("/delete",
                responses=generate_response_schemas(invite_group_link.delete_by_id))
 def delete_invite_link(id:str,
@@ -66,8 +69,8 @@ def delete_invite_link(id:str,
         invite_group_link.delete_by_id.execute(db, user_id, id)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get("/search",
             response_model=schemas.RestrictedInviteLink,
             responses=generate_response_schemas(invite_group_link.get_by_id))
@@ -77,8 +80,8 @@ def search_for_link(id:str,
         return schemas.RestrictedInviteLink.model_validate(invite_group_link.get_by_id.execute(db, id))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.post("/use_link",
              responses=generate_response_schemas(invite_group_link.use))
 def use_invite_link(link_id:str,
@@ -89,8 +92,8 @@ def use_invite_link(link_id:str,
         invite_group_link.use.execute(db, link_id=link_id, user_id=user_id)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 
 
 

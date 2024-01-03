@@ -5,6 +5,7 @@ class NoNeededConstraints(BaseDbException):
     class config:
         status_code = 400
         description = 'Constraints_failed'
+        id = 11
 
     def __init__(self, **kwargs):
         super().__init__(self.config)
@@ -16,6 +17,7 @@ class NotFound(BaseDbException):
     class config:
         status_code = 404
         description = 'Poll_not_found'
+        id = 12
 
     def __init__(self, **kwargs):
         super().__init__(self.config)
@@ -28,6 +30,7 @@ class Forbidden(BaseDbException):
     class config:
         status_code = 403
         description = 'Forbidden_due_to_poll_rights'
+        id = 13
 
     def __init__(self, **kwargs):
         super().__init__(self.config)
@@ -39,6 +42,7 @@ class AlreadyFrozen(BaseDbException):
     class config:
         status_code = 410
         description = 'Poll_is_already_frozen'
+        id = 14
 
     def __init__(self, **kwargs):
         super().__init__(self.config)

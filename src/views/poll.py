@@ -3,6 +3,7 @@ from enum import StrEnum
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 import src.database as database
 from . import schemas, generate_response_schemas
@@ -25,8 +26,8 @@ def create_poll(poll: schemas.PollCreate,
         return schemas.Poll.model_validate(db_poll.create.execute(db, user_id=user_id, **poll.__dict__))
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 
 @router.get('/created_by_me',
             responses={
@@ -49,8 +50,8 @@ def get_polls_for_group(group_id:int,
         return [schemas.Poll.model_validate(i) for i in db_poll.for_group.execute(db, user_id, group_id)]
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.get('/get_info',
             response_model=list[schemas.Poll])
 def get_poll_info(poll_id:int = None,

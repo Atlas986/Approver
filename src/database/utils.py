@@ -11,16 +11,17 @@ def get_session() -> SessionLocal:
     finally:
         db.close()
 
-def get_exception_schema(executable_obj:Any) -> dict[int:list[str]]:
+def get_exception_schema(executable_obj:Any) -> dict[int:list[Any]]:
     attrs = executable_obj.__dict__
     out = {}
     for key, value in attrs.items():
         try:
             if issubclass(value, exceptions.BaseDbException):
                 status_code, details = value().generate_http_exception()
+                id = value().get_exception_id()
                 if status_code not in out:
                     out[status_code] = []
-                out[status_code].append(details)
+                out[status_code].append({"details" : details, "id" : id})
         except Exception:
             pass
     return out

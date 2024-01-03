@@ -5,6 +5,8 @@ class AlreadyInvited(BaseDbException):
     class config:
         status_code = 400
         description = 'Already_invited_for_group'
+        id = 6
+
     def __init__(self, **kwargs):
         super().__init__(self.config)
 
@@ -16,6 +18,7 @@ class NotFound(BaseDbException):
     class config:
         status_code = 404
         description = 'Invite_not_found'
+        id = 7
     def __init__(self, **kwargs):
         super().__init__(self.config)
 

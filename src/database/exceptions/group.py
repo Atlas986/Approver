@@ -19,6 +19,7 @@ class NameTaken(BaseDbException):
     class config:
         status_code = 400
         description = 'Group_name_is_taken'
+        id = 2
     def __init__(self, **kwargs):
         super().__init__(self.config)
     def __str__(self):
@@ -28,6 +29,7 @@ class Forbidden(BaseDbException):
     class config:
         status_code = 403
         description = 'Forbidden_due_to_group_rights'
+        id = 3
     def __init__(self, **kwargs):
         super().__init__(self.config)
 

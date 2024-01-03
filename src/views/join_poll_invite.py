@@ -3,6 +3,7 @@ from enum import StrEnum
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 import src.database as database
 from . import schemas, generate_response_schemas
@@ -24,8 +25,8 @@ def create_join_poll_invite(invite:schemas.JoinPollInviteCreate,
         join_poll_invite.create.execute(db, user_id, invite.poll_id, invite.for_whom_id, invite.role)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 
 @router.get("/for_my_group",
             responses=generate_response_schemas(join_poll_invite.for_group),
@@ -38,8 +39,8 @@ def get_join_poll_invites_for_my_group(group_id:int,
         return [schemas.JoinPollInvite.model_validate(i) for i in join_poll_invite.for_group.execute(db, user_id, group_id)]
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.post("/accept",
              responses=generate_response_schemas(join_poll_invite.accept))
 def accept_join_poll_invite(join_group_invite_id:int,
@@ -50,8 +51,8 @@ def accept_join_poll_invite(join_group_invite_id:int,
         return join_poll_invite.accept.execute(db, user_id, join_group_invite_id)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.post("/decline",
              responses=generate_response_schemas(join_poll_invite.decline))
 def decline_join_poll_invite(join_group_invite_id:int,
@@ -62,6 +63,6 @@ def decline_join_poll_invite(join_group_invite_id:int,
         return join_poll_invite.decline.execute(db, user_id, join_group_invite_id)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
-
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 

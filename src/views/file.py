@@ -3,6 +3,7 @@ from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from fastapi.responses import FileResponse
+from starlette.responses import JSONResponse
 
 from src.config import jwt_config
 from . import schemas, generate_response_schemas
@@ -32,5 +33,6 @@ def download_file(file_id:str,
         file = db_file.get_by_id.execute(db, file_id)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
-        raise HTTPException(status_code=status_code, detail={'code': status_code, 'message': message})
+        id = e.get_exception_id()
+        return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
     return FileResponse(path=file.path, filename=file.filename)
