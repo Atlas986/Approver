@@ -1,4 +1,4 @@
-from src.database.exceptions import BaseDbException
+from src.database.exceptions.core import BaseDbException
 
 
 class NotFound(BaseDbException):
@@ -12,4 +12,3 @@ class NotFound(BaseDbException):
 
     def __str__(self):
         return f'Cannot find file by id.'
-

@@ -1,4 +1,4 @@
-from src.database.exceptions import BaseDbException
+from src.database.exceptions.core import BaseDbException
 
 
 class AlreadyInvited(BaseDbException):
@@ -13,16 +13,19 @@ class AlreadyInvited(BaseDbException):
     def __str__(self):
         return f'This group is already invited to the poll.'
 
+
 class AlreadyFrozen(BaseDbException):
     class config:
         status_code = 410
         description = 'Poll_is_already_frozen'
         id = 9
+
     def __init__(self, **kwargs):
         super().__init__(self.config)
 
     def __str__(self):
         return f'This poll is already frozen, so you can`t invite anyone else.'
+
 
 class NotFound(BaseDbException):
     class config:

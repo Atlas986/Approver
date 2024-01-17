@@ -1,4 +1,4 @@
-from src.database.exceptions import BaseDbException
+from src.database.exceptions.core import BaseDbException
 
 
 class AlreadyVoted(BaseDbException):

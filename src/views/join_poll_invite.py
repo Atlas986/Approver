@@ -3,22 +3,23 @@ from enum import StrEnum
 from fastapi import APIRouter, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 import src.database as database
-from . import schemas, generate_response_schemas
-from fastapi import Depends, FastAPI, HTTPException
+from . import schemas
+from .core import generate_response_schemas
+from fastapi import Depends
 
 from ..config import jwt_config
-from ..database.exceptions import BaseDbException
+from ..database.exceptions.core import BaseDbException
 from ..database.scripts import join_group_invite, join_poll_invite
 
 router = APIRouter(prefix='/join_poll_invites', tags=['Join_poll_invites'])
 
 @router.post("/create",
              responses=generate_response_schemas(join_poll_invite.create))
-def create_join_poll_invite(invite:schemas.JoinPollInviteCreate,
-                             db:Session = Depends(database.utils.get_session),
+def create_join_poll_invite(invite: schemas.JoinPollInviteCreate,
+                             db: Session = Depends(database.utils.get_session),
                              credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
     try:
@@ -27,6 +28,7 @@ def create_join_poll_invite(invite:schemas.JoinPollInviteCreate,
         status_code, message = e.generate_http_exception()
         id = e.get_exception_id()
         return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
+
 
 @router.get("/for_my_group",
             responses=generate_response_schemas(join_poll_invite.for_group),
@@ -55,7 +57,7 @@ def accept_join_poll_invite(join_group_invite_id:int,
         return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
 @router.post("/decline",
              responses=generate_response_schemas(join_poll_invite.decline))
-def decline_join_poll_invite(join_group_invite_id:int,
+def decline_join_poll_invite(join_group_invite_id: int,
                              db: Session = Depends(database.utils.get_session),
                              credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
