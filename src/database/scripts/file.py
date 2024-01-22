@@ -15,8 +15,13 @@ class create:
     def execute(db: Session, file: BinaryIO, filename: str, user_id: Optional[int] = None) -> outer_models.File:
         try:
             id: str = str(uuid.uuid1())
-            path = os.path.join(os.getcwd(), create.file_folder, id)
-            file_out = open(path, 'wb')
+            try:
+                path = os.path.join(os.getcwd(), create.file_folder, id)
+                file_out = open(path, 'wb')
+            except Exception:
+                os.mkdir(os.path.join(os.getcwd(), create.file_folder))
+                path = os.path.join(os.getcwd(), create.file_folder, id)
+                file_out = open(path, 'wb')
 
             db_file = models.File(**remove_null_arguments(id=id, filename=filename, created_by_id=user_id, path=path))
             db.add(db_file)

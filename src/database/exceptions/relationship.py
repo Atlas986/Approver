@@ -3,7 +3,7 @@ from src.database.exceptions.core import BaseDbException
 
 class NotFound(BaseDbException):
     class config:
-        status_code = 404
+        status_code = 400
         description = 'User_not_in_group'
         id = 15
 

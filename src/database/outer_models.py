@@ -72,7 +72,7 @@ class File(BaseModel):
 class Poll(BaseModel):
     id: int
     title: str
-    document_id: str
+    file_id: str
     created_at: datetime
     deadline: Optional[datetime]
     result_id: Optional[str]

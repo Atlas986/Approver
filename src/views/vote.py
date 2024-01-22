@@ -28,7 +28,7 @@ def vote_to_poll(vote: schemas.VoteCreate,
                  credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
     user_id = credentials.subject["id"]
     try:
-        db_poll.vote.execute(db, user_id, vote.group_id, vote.poll_id, vote.accepted)
+        db_poll.vote.execute(db, user_id, vote.poll_id, vote.accepted)
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
         id = e.get_exception_id()

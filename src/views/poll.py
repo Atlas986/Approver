@@ -11,6 +11,7 @@ from . import schemas
 from ..config import jwt_config
 from ..database.exceptions.core import BaseDbException
 from ..database.scripts import poll as db_poll
+from ..database.scripts import group as db_group
 
 
 router = APIRouter(prefix='/polls', tags=['Polls'])
@@ -50,14 +51,35 @@ def get_polls_for_group(group_id: int,
     user_id = credentials.subject["id"]
     try:
         return [schemas.Poll.model_validate(i) for i in db_poll.for_group.execute(db, user_id, group_id)]
-    except db_poll.for_group.not_in_group:
-        raise HTTPException(status_code=400)
-
 
     except BaseDbException as e:
         status_code, message = e.generate_http_exception()
         id = e.get_exception_id()
         return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
+
+@router.get('/for_me',
+            responses=generate_response_schemas(db_poll.for_group),
+            response_model=list[schemas.Poll])
+def get_polls_for_me(db: Session = Depends(get_session),
+                     credentials: JwtAuthorizationCredentials = Security(jwt_config.access_security)):
+    user_id = credentials.subject["id"]
+    groups = db_group.get_for_user.execute(db, user_id=user_id)
+    answer = []
+    for group in groups:
+        group_id = group.id
+        try:
+            answer.extend([schemas.Poll.model_validate(i) for i in db_poll.for_group.execute(db, user_id, group_id)])
+        except BaseDbException as e:
+            status_code, message = e.generate_http_exception()
+            id = e.get_exception_id()
+            return JSONResponse(status_code=status_code, content={'exception_id': id, 'message': message})
+    fin_answer = []
+    ids = []
+    for group in answer:
+        if not group.id in ids:
+            ids.append(group.id)
+            fin_answer.append(group)
+    return fin_answer
 @router.get('/get_info',
             response_model=list[schemas.Poll])
 def get_poll_info(poll_id: int | None = None,

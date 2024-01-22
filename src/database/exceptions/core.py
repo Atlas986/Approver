@@ -12,7 +12,6 @@ class BaseDbException(Exception):
         exceptions_holder = dict(sorted(exceptions_holder.items()))
         with open('/database/../exceptions.json', 'w') as f:
             f.write(str(exceptions_holder))
-        print(exceptions_holder)
 
     def generate_http_exception(self) -> (int, str):
         return self.config.status_code, self.config.description

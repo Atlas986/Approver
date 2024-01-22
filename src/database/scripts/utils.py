@@ -91,6 +91,6 @@ def safe_get_polls_by_user_id(db: Session, owner_id: int) -> list[models.Poll]:
     return [safe_get_poll_by_id.execute(db, i.id) for i in polls]
 
 
-def safe_get_polls_by_document_id(db: Session, document_id: int) -> list[models.Poll]:
-    polls: list[models.Poll] = get_by(db, models.Poll, models.Poll.file_id, document_id)
+def safe_get_polls_by_file_id(db: Session, file_id: int) -> list[models.Poll]:
+    polls: list[models.Poll] = get_by(db, models.Poll, models.Poll.file_id, file_id)
     return [safe_get_poll_by_id.execute(db, i.id) for i in polls]

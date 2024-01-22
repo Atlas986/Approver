@@ -3,16 +3,12 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from src.database.models import BaseModel
-
-
-class Poll_states(Enum):
-    active = "active"
-    frozen = "frozen"
+from src.database.models import PollStates
 
 
 class PollCreate(BaseModel):
     title: str
-    document_id: str
+    file_id: str
     expires: Optional[timedelta] = None
     voters_limit: Optional[int] = None
 
@@ -20,12 +16,12 @@ class PollCreate(BaseModel):
 class Poll(BaseModel):
     id: int
     title: str
-    document_id: str
+    file_id: str
     created_at: datetime
     deadline: Optional[datetime] = None
     result_id: Optional[str] = None
 
-    state: Poll_states
+    state: PollStates
 
     voted_for: int
     voted_against: int
@@ -35,7 +31,7 @@ class Poll(BaseModel):
 class RestrictedPoll(BaseModel):
     id: int
     title: str
-    document_id: str
+    file_id: str
     created_at: datetime
     deadline: Optional[datetime] = None
     voters_limit: Optional[int] = None
